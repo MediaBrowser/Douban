@@ -43,16 +43,19 @@ namespace Douban
         public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, LibraryOptions libraryOptions, CancellationToken cancellationToken)
         {
             var list = new List<RemoteImageInfo>();
-            var cachePath = Path.Combine(_appPaths.CachePath, "douban", item.GetProviderId(Name), "image.txt");
-            if (File.Exists(cachePath))
+            if (!string.IsNullOrEmpty(item.GetProviderId(Name)))
             {
-                var image = new RemoteImageInfo
+                var cachePath = Path.Combine(_appPaths.CachePath, "douban", item.GetProviderId(Name), "image.txt");
+                if (File.Exists(cachePath))
                 {
-                    ProviderName = Name,
-                    Url = File.ReadAllText(cachePath),
-                    Type = ImageType.Primary
-                };
-                list.Add(image);
+                    var image = new RemoteImageInfo
+                    {
+                        ProviderName = Name,
+                        Url = File.ReadAllText(cachePath),
+                        Type = ImageType.Primary
+                    };
+                    list.Add(image);
+                }
             }
             return Task.FromResult<IEnumerable<RemoteImageInfo>>(list);
         }

@@ -50,7 +50,7 @@ namespace Douban
             if (!info.ProviderIds.TryGetValue(Name, out string id))
             {
                 var res = await GetSearchResults(info, cancellationToken).ConfigureAwait(false);
-                if (!res.FirstOrDefault().ProviderIds.TryGetValue(Name, out id))
+                if (res.Count() == 0 || !res.FirstOrDefault().ProviderIds.TryGetValue(Name, out id))
                 {
                     return metadataResult;
                 }
