@@ -72,22 +72,30 @@ namespace Douban
                 {
                     Name = result.title,
                     Overview = result.summary,
-                    CommunityRating = result.rating.average,
                     ProductionYear = int.Parse(result.year),
                     OriginalTitle = result.original_title,
                     Genres = result.genres
                 };
-
+                if (result.rating != null)
+                {
+                    metadataResult.Item.CommunityRating = result.rating.average;
+                }
                 metadataResult.Item.ProviderIds.Add(Name, result.id);
 
                 foreach (var cast in result.casts)
                 {
                     var pi = new PersonInfo
                     {
-                        ImageUrl = cast.avatars.large,
                         Name = cast.name
                     };
-                    pi.ProviderIds.Add(Name, cast.id);
+                    if (cast.avatars != null)
+                    {
+                        pi.ImageUrl = cast.avatars.large;
+                    }
+                    if (!string.IsNullOrEmpty(cast.id))
+                    {
+                        pi.ProviderIds.Add(Name, cast.id);
+                    }
                     metadataResult.AddPerson(pi);
                 }
 
