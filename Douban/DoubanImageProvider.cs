@@ -11,6 +11,7 @@ using MediaBrowser.Model.Configuration;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
+using MediaBrowser.Model.IO;
 
 namespace Douban
 {
@@ -19,12 +20,14 @@ namespace Douban
         private readonly IHttpClient _httpClient;
         private readonly ILogger _logger;
         private readonly IApplicationPaths _appPaths;
+        private readonly IFileSystem _fileSystem;
 
-        public DoubanImageProvider(IHttpClient httpClient, ILogger logger, IApplicationPaths appPaths)
+        public DoubanImageProvider(IHttpClient httpClient, ILogger logger, IApplicationPaths appPaths, IFileSystem fileSystem)
         {
             _httpClient = httpClient;
             _logger = logger;
             _appPaths = appPaths;
+            _fileSystem = fileSystem;
         }
         public string Name => "Douban";
 
@@ -40,24 +43,30 @@ namespace Douban
             return _httpClient.GetResponse(options);
         }
 
-        public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, LibraryOptions libraryOptions, CancellationToken cancellationToken)
+        public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, LibraryOptions libraryOptions, CancellationToken cancellationToken)
         {
             var list = new List<RemoteImageInfo>();
             if (!string.IsNullOrEmpty(item.GetProviderId(Name)))
             {
                 var cachePath = Path.Combine(_appPaths.CachePath, "douban", item.GetProviderId(Name), "image.txt");
-                if (File.Exists(cachePath))
+
+                try
                 {
                     var image = new RemoteImageInfo
                     {
                         ProviderName = Name,
-                        Url = File.ReadAllText(cachePath),
+                        Url = await _fileSystem.ReadAllTextAsync(cachePath, cancellationToken).ConfigureAwait(false),
                         Type = ImageType.Primary
                     };
                     list.Add(image);
                 }
+                catch (FileNotFoundException)
+                {
+
+                }
             }
-            return Task.FromResult<IEnumerable<RemoteImageInfo>>(list);
+
+            return list;
         }
 
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => new[] { ImageType.Primary };

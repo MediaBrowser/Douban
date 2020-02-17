@@ -12,6 +12,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.IO;
 
 namespace Douban
 {
@@ -23,12 +24,15 @@ namespace Douban
         private readonly IApplicationPaths _appPaths;
         private readonly string baseUrl = "https://api.douban.com/v2";
         private readonly string apiKey = "0dad551ec0f84ed02907ff5c42e8ec70";
-        public DoubanMovieProvider(ILogger logger, IHttpClient httpClient, IJsonSerializer jsonSerializer, IApplicationPaths appPaths)
+        private readonly IFileSystem _fileSystem;
+
+        public DoubanMovieProvider(ILogger logger, IHttpClient httpClient, IJsonSerializer jsonSerializer, IApplicationPaths appPaths, IFileSystem fileSystem)
         {
             _logger = logger;
             _httpClient = httpClient;
             _jsonSerializer = jsonSerializer;
             _appPaths = appPaths;
+            _fileSystem = fileSystem;
         }
         public int Order => 3;
 
@@ -102,8 +106,8 @@ namespace Douban
                 try
                 {
                     var cachePath = Path.Combine(_appPaths.CachePath, "douban", result.id, "image.txt");
-                    Directory.CreateDirectory(Path.GetDirectoryName(cachePath));
-                    File.WriteAllText(cachePath, result.images.large);
+                    _fileSystem.CreateDirectory(_fileSystem.GetDirectoryName(cachePath));
+                    _fileSystem.WriteAllText(cachePath, result.images.large);
                 }
                 catch
                 {
